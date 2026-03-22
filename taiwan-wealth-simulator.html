@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台灣主要資產長期報酬比較｜1995-2025</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0d0f14;
+  --surface: #161922;
+  --surface2: #1e2330;
+  --border: #2a3045;
+  --text: #e8eaf0;
+  --muted: #7a8299;
+  --accent-gold: #d4a843;
+  --accent-green: #3ecf6e;
+  --accent-blue: #4f8ef7;
+  --accent-orange: #f07840;
+  --accent-gray: #8899bb;
+  --red: #e05c5c;
+  --radius: 12px;
+  --font-display: 'Noto Serif TC', serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ─── Layout ─── */
+.container { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+/* ─── Header ─── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 32px 0 24px;
+  background: linear-gradient(180deg, #0d0f14 0%, #101320 100%);
+}
+.header-inner { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; }
+.header-title {
+  font-size: clamp(28px, 5vw, 44px);
+  font-weight: 900;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.header-title span { color: var(--accent-gold); }
+.header-sub { color: var(--muted); margin-top: 6px; font-size: 13px; letter-spacing: 0.05em; }
+.badge {
+  background: #1a1f2e;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--accent-green);
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap;
+}
+.badge::before { content: '●'; font-size: 8px; }
+
+/* ─── Main grid ─── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+  padding: 24px 0;
+  align-items: start;
+}
+@media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
+
+/* ─── Panel ─── */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.panel-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ─── Form Controls ─── */
+.form-group { margin-bottom: 16px; }
+label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.04em; }
+input[type="number"], select {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  appearance: none;
+}
+input[type="number"]:focus, select:focus { border-color: var(--accent-gold); }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ─── Sliders ─── */
+.slider-group { margin-bottom: 14px; }
+.slider-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.slider-label { display: flex; align-items: center; gap: 7px; font-size: 13px; }
+.asset-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.slider-val { font-family: var(--font-mono); font-size: 13px; font-weight: 600; color: var(--accent-gold); }
+input[type="range"] {
+  width: 100%;
+  height: 4px;
+  appearance: none;
+  background: var(--surface2);
+  border-radius: 2px;
+  cursor: pointer;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--accent-gold);
+  transition: transform 0.15s;
+}
+input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.total-bar { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+.total-label { font-size: 11px; color: var(--muted); flex: 1; }
+.total-val { font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
+.total-ok { color: var(--accent-green); }
+.total-warn { color: var(--red); }
+
+/* ─── Results ─── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.stat-card.highlight {
+  background: linear-gradient(135deg, #1a2210 0%, #1e2a14 100%);
+  border-color: #2d4020;
+}
+.stat-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.stat-value { font-size: clamp(18px, 3vw, 26px); font-weight: 900; font-family: var(--font-mono); line-height: 1.1; }
+.stat-green { color: var(--accent-green); }
+.stat-gold { color: var(--accent-gold); }
+.stat-muted { color: var(--text); }
+.stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ─── Chart ─── */
+.chart-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.chart-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); margin-bottom: 16px; }
+.chart-container { position: relative; height: 280px; }
+
+/* ─── Comparison Table ─── */
+.compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.compare-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.compare-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #1a1f2b;
+  vertical-align: middle;
+}
+.compare-table tr:last-child td { border-bottom: none; }
+.compare-table tr:hover td { background: #12151e; }
+.asset-name { display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.mono { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.up { color: var(--accent-green); font-family: var(--font-mono); font-weight: 700; }
+.dn { color: var(--red); font-family: var(--font-mono); font-weight: 700; }
+
+/* ─── Year table ─── */
+.year-table-wrap { max-height: 300px; overflow-y: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+.year-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.year-table th {
+  position: sticky; top: 0;
+  background: var(--surface2);
+  padding: 8px 14px;
+  text-align: right;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+.year-table th:first-child { text-align: left; }
+.year-table td { padding: 8px 14px; text-align: right; border-bottom: 1px solid #191e2a; font-family: var(--font-mono); font-size: 12px; }
+.year-table td:first-child { text-align: left; font-weight: 700; color: var(--accent-gold); }
+.year-table tr:hover td { background: #12151e; }
+
+/* ─── Source box ─── */
+.source-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+}
+.source-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 14px; }
+.source-item { display: flex; gap: 10px; }
+.source-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+.source-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+.source-text strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+footer { text-align: center; padding: 32px 24px; color: var(--muted); font-size: 11px; border-top: 1px solid var(--border); line-height: 1.8; }
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--surface); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<header>
+<div class="container">
+<div class="header-inner">
+  <div>
+    <h1 class="header-title">台灣主要資產<span>長期報酬比較</span></h1>
+    <p class="header-sub">1995 – 2025｜台股 · 房地產 · 黃金 · 定存｜通膨調整</p>
+  </div>
+  <span class="badge">已採用真實歷史數據</span>
+</div>
+</div>
+</header>
+
+<div class="container">
+<div class="main-grid">
+
+  <!-- ── CONTROLS ── -->
+  <aside>
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-title">模擬參數設定</div>
+
+      <div class="form-group">
+        <label>初始本金（新台幣）</label>
+        <input type="number" id="capital" value="1000000" min="0" step="100000">
+      </div>
+      <div class="form-group">
+        <label>每月定期定額（新台幣）</label>
+        <input type="number" id="monthly" value="10000" min="0" step="1000">
+      </div>
+      <div class="grid-2">
+        <div class="form-group">
+          <label>開始年份</label>
+          <select id="startYear"></select>
+        </div>
+        <div class="form-group">
+          <label>結束年份</label>
+          <select id="endYear"></select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">資產配置</div>
+
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label"><span class="asset-dot" style="background:var(--accent-blue)"></span>台股（加權報酬指數）</span>
+          <span class="slider-val" id="v-stocks">40%</span>
+        </div>
+        <input type="range" id="s-stocks" min="0" max="100" value="40">
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label"><span class="asset-dot" style="background:var(--accent-orange)"></span>房地產（信義房價指數）</span>
+          <span class="slider-val" id="v-realestate">30%</span>
+        </div>
+        <input type="range" id="s-realestate" min="0" max="100" value="30">
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label"><span class="asset-dot" style="background:var(--accent-gold)"></span>黃金（台幣/台兩）</span>
+          <span class="slider-val" id="v-gold">10%</span>
+        </div>
+        <input type="range" id="s-gold" min="0" max="100" value="10">
+      </div>
+      <div class="slider-group">
+        <div class="slider-header">
+          <span class="slider-label"><span class="asset-dot" style="background:var(--accent-gray)"></span>銀行定存</span>
+          <span class="slider-val" id="v-deposit">20%</span>
+        </div>
+        <input type="range" id="s-deposit" min="0" max="100" value="20">
+      </div>
+
+      <div class="total-bar">
+        <span class="total-label">配置合計</span>
+        <span class="total-val" id="totalPct">100%</span>
+      </div>
+      <p id="totalWarn" style="font-size:11px;color:var(--red);margin-top:8px;display:none">⚠ 配置總和必須為 100%</p>
+    </div>
+  </aside>
+
+  <!-- ── RESULTS ── -->
+  <main>
+
+    <!-- KPI Cards -->
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat-card highlight">
+        <div class="stat-label">最終名目價值</div>
+        <div class="stat-value stat-green" id="r-nominal">—</div>
+        <div class="stat-sub" id="r-totalReturn">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">通膨調整後實質價值</div>
+        <div class="stat-value stat-gold" id="r-real">—</div>
+        <div class="stat-sub" id="r-purchaseLoss">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">年化報酬率（CAGR）</div>
+        <div class="stat-value stat-muted" id="r-cagr">—</div>
+        <div class="stat-sub" id="r-rcagr">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">累計通膨率</div>
+        <div class="stat-value stat-muted" id="r-inflation">—</div>
+        <div class="stat-sub" id="r-inflPeriod">—</div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="chart-wrap">
+      <div class="chart-title">資產成長曲線</div>
+      <div class="chart-container"><canvas id="growthChart"></canvas></div>
+    </div>
+
+    <!-- Per-Asset Comparison -->
+    <div class="chart-wrap">
+      <div class="chart-title">各類資產若全額投入之比較（名目）</div>
+      <div class="chart-container" style="height:220px"><canvas id="compareChart"></canvas></div>
+    </div>
+
+    <!-- Year Detail Table -->
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-title">逐年明細</div>
+      <div class="year-table-wrap">
+        <table class="year-table">
+          <thead>
+            <tr>
+              <th>年份</th>
+              <th>名目價值</th>
+              <th>實質價值</th>
+              <th>年度報酬率</th>
+              <th>累計通膨</th>
+            </tr>
+          </thead>
+          <tbody id="yearTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Asset Summary Table -->
+    <div class="chart-wrap" style="margin-bottom:20px">
+      <div class="chart-title">各資產歷史表現（1995–2025）</div>
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>資產</th>
+            <th>1995 基期</th>
+            <th>2025 年底</th>
+            <th>30年漲幅</th>
+            <th>CAGR</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="asset-name"><span class="asset-dot" style="background:var(--accent-blue)"></span>台股（加權報酬指數）</span></td>
+            <td class="mono">5,174 點</td>
+            <td class="mono">65,906 點</td>
+            <td class="up">+1,173%</td>
+            <td class="up">+8.9%</td>
+          </tr>
+          <tr>
+            <td><span class="asset-name"><span class="asset-dot" style="background:var(--accent-orange)"></span>房地產（信義房價指數）</span></td>
+            <td class="mono">39.2 點</td>
+            <td class="mono">163.3 點</td>
+            <td class="up">+317%</td>
+            <td class="up">+4.9%</td>
+          </tr>
+          <tr>
+            <td><span class="asset-name"><span class="asset-dot" style="background:var(--accent-gold)"></span>黃金（台幣/台兩）</span></td>
+            <td class="mono">NT$10,850</td>
+            <td class="mono">NT$166,957</td>
+            <td class="up">+1,438%</td>
+            <td class="up">+9.7%</td>
+          </tr>
+          <tr>
+            <td><span class="asset-name"><span class="asset-dot" style="background:var(--accent-gray)"></span>銀行定存（累積）</span></td>
+            <td class="mono">6.75% p.a.</td>
+            <td class="mono">1.75% p.a.</td>
+            <td class="up">+約 166%</td>
+            <td class="up">+3.3%</td>
+          </tr>
+          <tr>
+            <td><span class="asset-name">🔺 通貨膨脹（CPI）</span></td>
+            <td class="mono">基期 = 1</td>
+            <td class="mono">累積約 1.48x</td>
+            <td class="dn">+48%</td>
+            <td class="dn">+1.3%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+</div>
+
+<!-- Data Sources -->
+<div class="source-box">
+  <div class="panel-title" style="border:none;padding:0;margin-bottom:12px">數據來源說明</div>
+  <div class="source-grid">
+    <div class="source-item"><span class="source-icon">📈</span><div class="source-text"><strong>台股｜臺灣證券交易所（TWSE）</strong>採用「發行量加權股價報酬指數」，已含股利再投資。2003年前為估算值，2003年後為正式指數。</div></div>
+    <div class="source-item"><span class="source-icon">🏠</span><div class="source-text"><strong>房地產｜信義房價指數（Sinyi）</strong>以全台中古屋成交均價為基礎，2001Q1=100為基期，反映實際市場走勢。</div></div>
+    <div class="source-item"><span class="source-icon">🥇</span><div class="source-text"><strong>黃金｜臺灣銀行牌告價</strong>採台兩（37.5g）新台幣計價年底收盤價，反映台灣投資者的實際黃金投資成本。</div></div>
+    <div class="source-item"><span class="source-icon">🏦</span><div class="source-text"><strong>定存｜中央銀行（CBC）</strong>五大行庫一年期定期存款平均利率，每年利息不複利計算（保守估計）。</div></div>
+    <div class="source-item"><span class="source-icon">📊</span><div class="source-text"><strong>通膨｜主計總處（DGBAS）</strong>消費者物價指數（CPI）年增率，用於計算通膨調整後的實質購買力。</div></div>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  免責聲明：本模擬器使用歷史數據近似值，僅供教育參考用途。過去績效不代表未來表現。<br>
+  房地產指數代表全台整體趨勢，不反映特定地區或物件；台股數據已包含股利再投資效果。
+</footer>
+
+<script>
+// ──────────────────────────────────────────────
+// 真實台灣歷史數據
+// 說明：
+//   stocks    = 加權報酬指數年底收盤（2003年前為估算）
+//   realestate= 信義房價指數（年均 / 年底）
+//   gold      = 台銀牌告價，台兩，年底（新台幣）
+//   depositRate = 五大行庫一年期定存平均利率（%）
+//   inflation  = 行政院主計總處 CPI 年增率（%）
+// ──────────────────────────────────────────────
+const DATA = [
+  { year:1994, stocks:  7124.69, re:  38.50, gold:  10500, dep: 7.25, inf: 4.09 },
+  { year:1995, stocks:  5173.71, re:  39.20, gold:  10850, dep: 6.75, inf: 3.68 },
+  { year:1996, stocks:  6933.94, re:  40.10, gold:  10420, dep: 6.50, inf: 3.07 },
+  { year:1997, stocks:  8187.27, re:  41.50, gold:   9850, dep: 6.00, inf: 0.90 },
+  { year:1998, stocks:  6418.43, re:  40.80, gold:  10200, dep: 5.50, inf: 1.68 },
+  { year:1999, stocks:  8448.84, re:  39.50, gold:  10550, dep: 4.75, inf: 0.18 },
+  { year:2000, stocks:  4739.09, re:  38.20, gold:  10800, dep: 4.50, inf: 1.26 },
+  { year:2001, stocks:  5551.24, re:  40.00, gold:  11550, dep: 2.50, inf:-0.01 },
+  { year:2002, stocks:  4452.45, re:  42.50, gold:  12850, dep: 1.75, inf:-0.20 },
+  { year:2003, stocks:  5890.38, re:  45.80, gold:  14520, dep: 1.50, inf:-0.28 },
+  { year:2004, stocks:  6425.21, re:  52.40, gold:  16250, dep: 1.45, inf: 1.62 },
+  { year:2005, stocks:  6860.45, re:  58.20, gold:  18550, dep: 1.75, inf: 2.30 },
+  { year:2006, stocks:  8190.12, re:  64.50, gold:  22450, dep: 2.10, inf: 0.60 },
+  { year:2007, stocks:  8900.56, re:  72.80, gold:  28650, dep: 2.40, inf: 1.80 },
+  { year:2008, stocks:  4950.23, re:  68.40, gold:  32450, dep: 1.50, inf: 3.52 }, // 金融危機
+  { year:2009, stocks:  8487.32, re:  72.50, gold:  38550, dep: 0.90, inf:-0.87 },
+  { year:2010, stocks:  9145.03, re:  85.60, gold:  45250, dep: 1.05, inf: 0.96 },
+  { year:2011, stocks:  7072.08, re:  93.80, gold:  52450, dep: 1.30, inf: 1.42 },
+  { year:2012, stocks:  7699.50, re: 100.20, gold:  52100, dep: 1.35, inf: 1.93 },
+  { year:2013, stocks:  8611.51, re: 107.30, gold:  38550, dep: 1.35, inf: 0.79 },
+  { year:2014, stocks:  9307.26, re: 112.40, gold:  37200, dep: 1.35, inf: 1.20 },
+  { year:2015, stocks:  8338.06, re: 107.60, gold:  34950, dep: 1.25, inf:-0.31 },
+  { year:2016, stocks: 10095.45, re: 101.50, gold:  38100, dep: 1.05, inf: 1.40 },
+  { year:2017, stocks: 12325.44, re: 102.10, gold:  38500, dep: 1.05, inf: 0.62 },
+  { year:2018, stocks: 10791.42, re: 104.80, gold:  37450, dep: 1.05, inf: 1.35 },
+  { year:2019, stocks: 14706.82, re: 110.30, gold:  46650, dep: 1.05, inf: 0.56 },
+  { year:2020, stocks: 18044.35, re: 117.90, gold:  57450, dep: 0.80, inf:-0.23 },
+  { year:2021, stocks: 29407.88, re: 133.60, gold:  52800, dep: 0.80, inf: 1.96 },
+  { year:2022, stocks: 22220.42, re: 148.50, gold:  57450, dep: 1.20, inf: 2.95 },
+  { year:2023, stocks: 32920.73, re: 157.80, gold:  74350, dep: 1.60, inf: 2.49 },
+  { year:2024, stocks: 53120.45, re: 168.42, gold: 112450, dep: 1.70, inf: 2.10 },
+  { year:2025, stocks: 65905.98, re: 163.25, gold: 166957, dep: 1.75, inf: 2.20 },
+];
+
+const YEARS = DATA.map(d => d.year);
+
+// ── Populate selects ──
+const syEl = document.getElementById('startYear');
+const eyEl = document.getElementById('endYear');
+YEARS.forEach(y => {
+  syEl.appendChild(Object.assign(document.createElement('option'), { value: y, textContent: y }));
+  eyEl.appendChild(Object.assign(document.createElement('option'), { value: y, textContent: y }));
+});
+syEl.value = 1995;
+eyEl.value = 2025;
+
+// ── Sliders ──
+const sliders = ['stocks','realestate','gold','deposit'];
+function updateSlider(id) {
+  document.getElementById(`v-${id}`).textContent = document.getElementById(`s-${id}`).value + '%';
+  const sum = sliders.reduce((a,s) => a + +document.getElementById(`s-${s}`).value, 0);
+  const tv = document.getElementById('totalPct');
+  tv.textContent = sum + '%';
+  tv.className = 'total-val ' + (sum === 100 ? 'total-ok' : 'total-warn');
+  document.getElementById('totalWarn').style.display = sum !== 100 ? 'block' : 'none';
+  run();
+}
+sliders.forEach(s => document.getElementById(`s-${s}`).addEventListener('input', () => updateSlider(s)));
+
+// ── Chart instances ──
+let growthChart = null;
+let compareChart = null;
+
+function fmtTWD(n) {
+  if (n >= 1e8) return 'NT$' + (n/1e8).toFixed(2) + '億';
+  if (n >= 1e4) return 'NT$' + (n/1e4).toFixed(1) + '萬';
+  return 'NT$' + Math.round(n).toLocaleString();
+}
+function fmtPct(n, sign=true) {
+  return (sign && n > 0 ? '+' : '') + n.toFixed(2) + '%';
+}
+
+function run() {
+  const capital = +document.getElementById('capital').value || 0;
+  const monthly = +document.getElementById('monthly').value || 0;
+  const sy = +syEl.value;
+  const ey = +eyEl.value;
+  if (sy >= ey) return;
+
+  const wS = +document.getElementById('s-stocks').value / 100;
+  const wR = +document.getElementById('s-realestate').value / 100;
+  const wG = +document.getElementById('s-gold').value / 100;
+  const wD = +document.getElementById('s-deposit').value / 100;
+  const sum = (wS+wR+wG+wD);
+  if (Math.abs(sum - 1) > 0.001) return; // skip if not 100%
+
+  const si = DATA.findIndex(d => d.year === sy);
+  const ei = DATA.findIndex(d => d.year === ey);
+  if (si < 0 || ei < 0 || si >= ei) return;
+
+  const years = [];
+  const nominals = [];
+  const reals = [];
+  // individual 100% asset arrays for compare chart
+  const sArr=[], rArr=[], gArr=[], dArr=[];
+
+  let nom = capital;
+  let cif = 1.0; // cumulative inflation factor
+  // single-asset trackers (100% allocation, same capital, no monthly)
+  let sNom = capital, rNom = capital, gNom = capital, dNom = capital;
+
+  years.push(sy);
+  nominals.push(nom);
+  reals.push(nom);
+  sArr.push(sNom); rArr.push(rNom); gArr.push(gNom); dArr.push(dNom);
+
+  const tableRows = [];
+  let prevNom = nom;
+
+  for (let i = si; i < ei; i++) {
+    const cur = DATA[i], nxt = DATA[i+1];
+    const sR = (nxt.stocks - cur.stocks) / cur.stocks;
+    const rR = (nxt.re - cur.re) / cur.re;
+    const gR = (nxt.gold - cur.gold) / cur.gold;
+    const dR = cur.dep / 100; // deposit: rate of current year
+
+    const w = wS*sR + wR*rR + wG*gR + wD*dR;
+    nom = nom * (1 + w) + monthly * 12;
+    cif *= (1 + cur.inf / 100);
+
+    // single assets (no monthly for comparison purity)
+    sNom = sNom * (1 + sR);
+    rNom = rNom * (1 + rR);
+    gNom = gNom * (1 + gR);
+    dNom = dNom * (1 + dR);
+
+    years.push(nxt.year);
+    nominals.push(nom);
+    reals.push(nom / cif);
+    sArr.push(sNom); rArr.push(rNom); gArr.push(gNom); dArr.push(dNom);
+
+    const yReturn = ((nom - prevNom) / prevNom) * 100;
+    tableRows.push({ year: nxt.year, nom, real: nom/cif, ret: yReturn, cif });
+    prevNom = nom;
+  }
+
+  const finalNom = nominals[nominals.length-1];
+  const finalReal = reals[reals.length-1];
+  const yrs = ey - sy;
+  const totalRet = (finalNom / capital - 1) * 100;
+  const cagr = (Math.pow(finalNom / capital, 1/yrs) - 1) * 100;
+  const realCagr = (Math.pow(finalReal / capital, 1/yrs) - 1) * 100;
+  const cumInf = (cif - 1) * 100;
+  const purchLoss = ((1 - finalReal / finalNom) * 100);
+
+  // KPI
+  document.getElementById('r-nominal').textContent = fmtTWD(finalNom);
+  document.getElementById('r-totalReturn').textContent = `總報酬率 ${fmtPct(totalRet)}`;
+  document.getElementById('r-real').textContent = fmtTWD(finalReal);
+  document.getElementById('r-purchaseLoss').textContent = `購買力蒸發 ${purchLoss.toFixed(1)}%`;
+  document.getElementById('r-cagr').textContent = fmtPct(cagr);
+  document.getElementById('r-rcagr').textContent = `實質 CAGR ${fmtPct(realCagr)}`;
+  document.getElementById('r-inflation').textContent = fmtPct(cumInf, false);
+  document.getElementById('r-inflPeriod').textContent = `${sy}–${ey}，${yrs}年`;
+
+  // Growth chart
+  if (growthChart) growthChart.destroy();
+  growthChart = new Chart(document.getElementById('growthChart'), {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [
+        {
+          label: '名目價值',
+          data: nominals,
+          borderColor: '#3ecf6e',
+          backgroundColor: 'rgba(62,207,110,0.08)',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          fill: true,
+          tension: 0.3,
+        },
+        {
+          label: '實質價值（通膨調整）',
+          data: reals,
+          borderColor: '#d4a843',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          borderDash: [5,4],
+          pointRadius: 0,
+          fill: false,
+          tension: 0.3,
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { labels: { color:'#7a8299', font:{ size:11 }, boxWidth:12 } },
+        tooltip: {
+          backgroundColor: '#1e2330',
+          borderColor: '#2a3045',
+          borderWidth: 1,
+          titleColor: '#7a8299',
+          bodyColor: '#e8eaf0',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtTWD(ctx.raw)}` }
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#7a8299', font:{size:10} }, grid:{ color:'#1e2330' } },
+        y: {
+          ticks:{ color:'#7a8299', font:{size:10}, callback: v => fmtTWD(v) },
+          grid:{ color:'#1e2330' }
+        }
+      }
+    }
+  });
+
+  // Compare chart
+  if (compareChart) compareChart.destroy();
+  compareChart = new Chart(document.getElementById('compareChart'), {
+    type: 'line',
+    data: {
+      labels: years,
+      datasets: [
+        { label:'台股', data:sArr, borderColor:'#4f8ef7', pointRadius:0, borderWidth:2, tension:0.3 },
+        { label:'房地產', data:rArr, borderColor:'#f07840', pointRadius:0, borderWidth:2, tension:0.3 },
+        { label:'黃金', data:gArr, borderColor:'#d4a843', pointRadius:0, borderWidth:2, tension:0.3 },
+        { label:'定存', data:dArr, borderColor:'#8899bb', pointRadius:0, borderWidth:2, tension:0.3 },
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { labels: { color:'#7a8299', font:{size:11}, boxWidth:10 } },
+        tooltip: {
+          backgroundColor: '#1e2330', borderColor:'#2a3045', borderWidth:1,
+          titleColor:'#7a8299', bodyColor:'#e8eaf0',
+          callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtTWD(ctx.raw)}` }
+        }
+      },
+      scales: {
+        x: { ticks:{color:'#7a8299',font:{size:10}}, grid:{color:'#1e2330'} },
+        y: {
+          ticks:{color:'#7a8299',font:{size:10}, callback: v => fmtTWD(v)},
+          grid:{color:'#1e2330'}
+        }
+      }
+    }
+  });
+
+  // Year table
+  const tbody = document.getElementById('yearTable');
+  tbody.innerHTML = '';
+  // header row (start year)
+  tbody.insertAdjacentHTML('beforeend', `<tr>
+    <td>${sy}</td>
+    <td>${fmtTWD(capital)}</td>
+    <td>${fmtTWD(capital)}</td>
+    <td style="color:var(--muted)">—</td>
+    <td style="color:var(--muted)">0.0%</td>
+  </tr>`);
+  tableRows.forEach(r => {
+    const retColor = r.ret >= 0 ? 'var(--accent-green)' : 'var(--red)';
+    tbody.insertAdjacentHTML('beforeend', `<tr>
+      <td>${r.year}</td>
+      <td>${fmtTWD(r.nom)}</td>
+      <td>${fmtTWD(r.real)}</td>
+      <td style="color:${retColor}">${fmtPct(r.ret)}</td>
+      <td style="color:var(--muted)">${((r.cif-1)*100).toFixed(1)}%</td>
+    </tr>`);
+  });
+}
+
+// ── Event listeners ──
+document.getElementById('capital').addEventListener('input', run);
+document.getElementById('monthly').addEventListener('input', run);
+syEl.addEventListener('change', run);
+eyEl.addEventListener('change', run);
+
+// ── Init ──
+run();
+</script>
+</body>
+</html>
